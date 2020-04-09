@@ -5,4 +5,4 @@ jdk:
 sudo: true
 cache:
   directories:
-    - $HOME/.m2
+    - D:\repo

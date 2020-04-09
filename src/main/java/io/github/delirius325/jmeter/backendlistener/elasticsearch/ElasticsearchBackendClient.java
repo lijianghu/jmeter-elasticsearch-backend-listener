@@ -1,4 +1,4 @@
-    package io.github.delirius325.jmeter.backendlistener.elasticsearch;
+package io.github.delirius325.jmeter.backendlistener.elasticsearch;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import com.amazonaws.auth.AWS4Signer;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.http.AWSRequestSigningApacheInterceptor;
 import com.google.gson.Gson;
 
 public class ElasticsearchBackendClient extends AbstractBackendListenerClient {
@@ -120,13 +119,16 @@ public class ElasticsearchBackendClient extends AbstractBackendListenerClient {
                             }
                         }).setMaxRetryTimeoutMillis(60000).build();
             } else {
-                AWS4Signer signer = new AWS4Signer();
-                signer.setServiceName(SERVICE_NAME);
-                signer.setRegionName(context.getParameter(ES_AWS_REGION));
-                HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(SERVICE_NAME, signer,
-                        credentialsProvider);
-                client = RestClient.builder(HttpHost.create(context.getParameter(ES_AWS_ENDPOINT)))
-                        .setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)).build();
+                //将ES_AWS_ENDPOINT配置为空,else逻辑不会走!
+//                AWS4Signer signer = new AWS4Signer();
+//                signer.setServiceName(SERVICE_NAME);
+//                signer.setRegionName(context.getParameter(ES_AWS_REGION));
+//                HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(SERVICE_NAME, signer,
+//                        credentialsProvider);
+                //这个是修改过的
+                client = RestClient.builder(HttpHost.create(context.getParameter(ES_AWS_ENDPOINT))).build();
+                //这个是原版
+//              .setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)).build();
             }
 
             convertParameterToSet(context, ES_SAMPLE_FILTER, this.filters);
@@ -157,8 +159,9 @@ public class ElasticsearchBackendClient extends AbstractBackendListenerClient {
         if (array.length > 0 && !array[0].trim().equals("")) {
             for (String entry : array) {
                 set.add(entry.toLowerCase().trim());
-                if(logger.isDebugEnabled())
+                if(logger.isDebugEnabled()){
                     logger.debug("Parsed from " + parameter + ": " + entry.toLowerCase().trim());
+                }
             }
         }
     }
